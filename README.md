@@ -276,19 +276,90 @@ ggplot(oneWayAnova, aes(x = Group, y = Length)) +
 ## Soal 5 (Anova 2 arah)
 Data yang digunakan merupakan hasil eksperimen yang dilakukan untuk mengetahui pengaruh suhu operasi (100˚C, 125˚C dan 150˚C) dan tiga jenis kaca pelat muka (A, B dan C) pada keluaran cahaya tabung osiloskop. Percobaan dilakukan sebanyak 27 kali dan didapat data sebagai berikut: Data Hasil Eksperimen. Dengan data tersebut: 
 
+> Pertama-tama download `.csv` lalu read isi `.csv`
+
+``` Volt
+GTL <- read.csv(file = "D:\\Download\\GTL.csv")
+head(GTL)
+str(GTL)
+```
+
 ### a. Buatlah plot sederhana untuk visualisasi data 
+> Visualisasi dilakukan dengan menggunakan fungsi `qplot()`
+
+``` Volt
+qplot(x = Temp, y = Light, geom = "point", data = GTL) + facet_grid(.~Glass, labeller = label_both)
+```
+
+<img width="385" alt="image" src="https://user-images.githubusercontent.com/91377782/207296125-565d4a27-fd7e-4358-b7f3-c965c3f3db8d.png">
 
 
 ### b. Lakukan uji ANOVA dua arah untuk 2 faktor
+> Membuat variabel as factor sebagai ANOVA
+
+``` Volt
+GTL$Glass <- as.factor(GTL$Glass)
+GTL$Temp_Factor <- as.factor(GTL$Temp)
+str(GTL)
+```
+
+<img width="295" alt="image" src="https://user-images.githubusercontent.com/91377782/207296333-316f5866-6a08-487b-81b6-61cc9a4a4364.png">
+
+> Melakukan ANOVA dengan fungsi `summary(aov())` 
+
+``` Volt
+anova <- aov(Light ~ Glass*Temp_Factor, data = GTL)
+summary(anova)
+```
+
+<img width="238" alt="image" src="https://user-images.githubusercontent.com/91377782/207296489-396af299-2aaa-44eb-9014-76b082a384fd.png">
 
 
 ### c. Tampilkan tabel dengan mean dan standar deviasi keluaran cahaya untuk setiap perlakuan (kombinasi kaca pelat muka dan suhu operasi)
 
+> Digunakan fungsi `group_by()` yang digunakan untuk melakukan data summary dengan fungsi `summarise()` 
+
+``` Volt
+data_summary <- group_by(GTL, Glass, Temp) %>%
+  summarise(mean = mean(Light), sd = sd(Light)) %>%
+  arrange(desc(mean))
+print(data_summary)
+```
+<img width="297" alt="image" src="https://user-images.githubusercontent.com/91377782/207296892-6af77837-55c1-4b81-a708-18e05ca05f1a.png">
+
+
 
 ### d. Lakukan uji Tukey
+> Digunakan fungsi `TukeyHSD()` untuk uji Tukey
+
+``` Volt
+tukey <- TukeyHSD(anova)
+print(tukey)
+```
+<img width="501" alt="image" src="https://user-images.githubusercontent.com/91377782/207298909-9dcbd12d-13cc-4b00-8f25-db19adb0afe7.png">
+<img width="478" alt="image" src="https://user-images.githubusercontent.com/91377782/207299073-28b2df41-3f57-44ab-8fb3-a3aea0cdcafb.png">
+<img width="474" alt="image" src="https://user-images.githubusercontent.com/91377782/207299159-5229eb24-66e1-48ca-8976-836d792e4e7c.png">
+
 
 
 ### e. Gunakan compact letter display untuk menunjukkan perbedaan signifikan antara uji Anova dan uji Tukey
+
+> Membuat compact letter display dengan fungsi `multcompLetterS4()`
+
+``` Volt
+tukey.cld <- multcompLetters4(anova, tukey)
+print(tukey.cld)
+```
+<img width="438" alt="image" src="https://user-images.githubusercontent.com/91377782/207299796-8c96363c-bd8b-401e-a99f-686381556c2f.png">
+
+> Menambahkan compact letter display ke tabel dengan mean dan standar deviasi yagn telah dibuat 
+
+``` Volt
+cld <- as.data.frame.list(tukey.cld$`Glass:Temp_Factor`)
+data_summary$Tukey <- cld$Letters
+print(data_summary)
+```
+<img width="250" alt="image" src="https://user-images.githubusercontent.com/91377782/207300051-eca09997-cb0e-416a-8b57-e0f047906b41.png">
 
 
 
